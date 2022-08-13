@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0">
+<title>Picker</title>
+<style>
+body {
+    background:#FFF;
+    color:#000;
+    font-family:verdana, sans-serif;
+    font-size:10pt;
+    margin:0;
+    padding:10px;
+}
+
+a:link, a:visited {
+    color:#008;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+a:active, a:hover {
+    color:#ACF;
+}
+
+.info {
+    font-weight:bold;
+}
+
+button {
+    font-family:inherit;
+    cursor:pointer;
+    border:0;
+    border-radius:3px;
+    padding:0.3em 0.5em;
+    background:#CCC;
+    color:#000;
+}
+
+button:hover {
+    background:#DDD;
+}
+
+button.disabled {
+    background:#DDD;
+    color:#888;
+    cursor:not-allowed;
+}
+
+button.disabled:hover {
+    background:#DDD;
+}
+
+#container {
+    position:relative;
+    margin-left:-10px;
+    margin-right:-10px;
+    padding:10px;
+    overflow:hidden;
+}
+
+@media (min-width:1024px) {
+    /* Put the found favorites beside the picking div when the window is sufficiently large */
+    #picking {
+        float:left;
+        width:636px;
+    }
+
+    #secondary {
+        margin-left:646px;
+    }
+}
+
+@media (min-width:1300px) {
+    /* Once we get to the point where 636px is less than half of the width of the screen, make the picking div just take up half */
+    #picking {
+        width:50%;
+    }
+
+    #secondary {
+        margin-left:51%;
+    }
+}
+
+#pick {
+    background:#58F;
+    color:#FFF;
+    font-size:larger;
+    font-weight:bold;
+    width:6em;
+    border-radius:5px;
+    margin-right:10px;
+}
+
+#pick.disabled {
+    background:#ACF;
+}
+
+#pick:hover {
+    background:#ACF;
+}
+
+.item-list {
+    padding:0;
+    list-style-type:none;
+    line-height:100px;
+}
+
+.item-list li {
+    margin:0;
+    display:inline-block;
+    height:100px;
+    width:100px;
+    line-height:100px;
+    border:3px solid transparent;
+    text-align:center;
+    position:relative;
+    vertical-align:top;
+    overflow:hidden;
+    border-radius:100%;
+    background:#F7F7F7;
+    color:#000;
+}
+
+.item-list li img {
+    vertical-align:middle;
+    max-height:100%;
+    max-width:100%;
+}
+
+.item-list li span {
+    display:inline-block;
+    vertical-align:middle;
+    line-height:1.2;
+}
+
+@media (max-width:636px) {
+    .item-list {
+        line-height:75px;
+    }
+
+    .item-list li {
+        line-height:75px;
+        height:75px;
+        width:75px;
+    }
+}
+
+@media (max-width:423px) {
+    .item-list {
+        line-height:50px;
+    }
+
+    .item-list li {
+        line-height:50px;
+        height:50px;
+        width:50px;
+    }
+}
+
+#evaluating li {
+    cursor:pointer;
+}
+
+#favorites li {
+    cursor:move;
+}
+
+.item-list li:hover {
+    background:#CDF;
+}
+
+.item-list.sorting li:hover {
+    background:#F7F7F7;
+}
+
+#evaluating li.selected {
+    border:3px solid #7AC;
+}
+
+#evaluating, #buttons {
+    text-align:center;
+    margin:auto;
+}
+
+#evaluating li.notice {
+    width:auto;
+    height:auto;
+    max-width:260px;
+    margin:auto;
+    background:#F7F7F7;
+    border-radius:10px;
+    padding:30px 30px;
+    color:#000;
+    text-align:center;
+    line-height:1.4;
+    cursor:auto;
+    font-size:10pt;
+}
+
+#buttons {
+    margin-top:30px;
+    position:relative;
+    z-index:3;
+}
+</style>
+</head>
+<body>
+<h1>Inanimate Insanity Favorite Character Picker</h1>
+
+<p>girl help this took me six hours to figure out</p>
+
+<p>instructions for coder at https://github.com/antialiasis/favorite-picker</p>
+  
+
+
+<div id="container">
+
+<div id="picking">
+<ul id="evaluating" class="item-list">
+</ul>
+
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+</div>
+
+<div id="secondary">
+<h2>Found favorites</h2>
+
+<ol id="favorites" class="item-list">
+</ol>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="picker.js"></script>
+<script src="picker-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.7.0/Sortable.min.js"></script>
+<script>
+'use strict';
+
+var items = [
+{id: 'apple', name: 'Apple', image: 'images/apple.jpg'},
+{id: 'balloon', name: 'Balloon', image: 'images/balloon.jpg'},
+{id: 'baseball', name: 'Baseball', image: 'images/baseball.jpg'},
+{id: 'bomb', name: 'Bomb', image: 'images/bomb.jpg'},
+{id: 'bow', name: 'Bow', image: 'images/bow.jpg'},
+{id: 'knife', name: 'Knife', image: 'images/knife.jpg'},
+{id: 'lightbulb', name: 'Lightbulb', image: 'images/lightbulb.jpg'},
+{id: 'marshmallow', name: 'Marshmallow', image: 'images/marshmallow.jpg'},
+{id: 'nickel', name: 'Nickel', image: 'images/nickel.jpg'},
+{id: 'oj', name: 'OJ', image: 'images/oj.jpg'},
+{id: 'paintbrush', name: 'Paintbrush', image: 'images/paintbrush.jpg'},
+{id: 'paper', name: 'Paper', image: 'images/paper.jpg'},
+{id: 'pepper', name: 'Pepper', image: 'images/pepper.jpg'},
+{id: 'pickle', name: 'Pickle', image: 'images/pickle.jpg'},
+{id: 'salt', name: 'Salt', image: 'images/salt.jpg'},
+{id: 'taco', name: 'Taco', image: 'images/taco.jpg'},
+{id: 'mephone4', name: 'MePhone4', image: 'images/mephone4.jpg'},
+{id: 'mephone4s', name: 'MePhone4S', image: 'images/mephone4s.jpg'},
+{id: 'box', name: 'Box', image: 'images/box.jpg'},
+{id: 'cheesy', name: 'Cheesy', image: 'images/cheesy.jpg'},
+{id: 'cherries', name: 'Cherries', image: 'images/cherries.jpg'},
+{id: 'dough', name: 'Dough', image: 'images/dough.jpg'},
+{id: 'fan', name: 'Fan', image: 'images/fan.jpg'},
+{id: 'microphone', name: 'Microphone', image: 'images/microphone.jpg'},
+{id: 'soap', name: 'Soap', image: 'images/soap.jpg'},
+{id: 'suitcase', name: 'Suitcase', image: 'images/suitcase.jpg'},
+{id: 'test tube', name: 'Test_Tube', image: 'images/testtube.jpg'},
+{id: 'tissues', name: 'Tissues', image: 'images/tissues.jpg'},
+{id: 'trophy', name: 'Trophy', image: 'images/trophy.jpg'},
+{id: 'yinyang', name: 'Yin-Yang', image: 'images/yinyang.jpg'},
+{id: 'toilet', name: 'Toilet', image: 'images/toilet.jpg'},
+{id: 'blueberry', name: 'Blueberry', image: 'images/blueberry.jpg'},
+{id: 'bowbot', name: 'BowBot', image: 'images/bowbot.jpg'},
+{id: 'cabby', name: 'Cabby', image: 'images/cabby.jpg'},
+{id: 'candle', name: 'Candle', image: 'images/candle.jpg'},
+{id: 'clover', name: 'Clover', image: 'images/clover.jpg'},
+{id: 'goo', name: 'Goo', image: 'images/goo.jpg'},
+{id: 'lifering', name: 'Lifering', image: 'images/lifering.jpg'},
+{id: 'silverspoon', name: 'Silver_Spoon', image: 'images/silver.jpg'},
+{id: 'teakettle', name: 'Tea_Kettle', image: 'images/teakettle.jpg'},
+{id: 'thefloor', name: 'The_Floor', image: 'images/floor.jpg'},
+{id: 'drfizz', name: 'Dr._Fizz', image: 'images/drfizz.jpg'},
+{id: '8ball', name: '8-Ball', image: 'images/8ball.jpg'},
+{id: 'bell', name: 'Bell', image: 'images/bell.jpg'},
+{id: 'cookie', name: 'Cookie', image: 'images/cookie.jpg'},
+{id: 'dictionary', name: 'Dictionary', image: 'images/dictionary.jpg'},
+{id: 'magnifying glass', name: 'Magnifying_Glass', image: 'images/magnifyingglass.jpg'},
+{id: 'poptart', name: 'Poptart', image: 'images/poptart.jpg'},
+{id: 'spikeymervert', name: 'Spikey_Mervert', image: 'images/spikey.jpg'},
+{id: 'tv', name: 'TV', image: 'images/tv.jpg'},
+{id: 'teddybear', name: 'Teddy_Bear', image: 'images/teddy.jpg'},
+{id: 'mephone3gs', name: 'MePhone3GS', image: 'images/mephone4gs.jpg'},
+{id: 'mephone5c', name: 'MePhone5C', image: 'images/mephone5c.jpg'},
+{id: 'mephone5s', name: 'Mephone5S', image: 'images/mephone5s.jpg'},
+{id: 'mephone6plus', name: 'Mephone6+', image: 'images/mephone6plus.jpg'},
+{id: 'mephone6', name: 'Mephone6', image: 'images/mephone6.jpg'},
+{id: 'stevecobs', name: 'Steve_Cobs', image: 'images/stevecobs.jpg'},
+{id: 'bandana', name: 'Bandana', image: 'images/bandana.jpg'},
+{id: 'barrel', name: 'Barrel', image: 'images/barrel.jpg'},
+{id: 'blackhole', name: 'Black_Hole', image: 'images/blackhole.jpg'},
+{id: 'frank', name: 'Frank', image: 'images/frank.jpg'},
+{id: 'haybale', name: 'HayBale', image: 'images/haybale.jpg'},
+{id: 'kumquat', name: 'Kumquat', image: 'images/kumquat.jpg'},
+{id: 'shell', name: 'Shell', image: 'images/shell.jpg'},
+{id: 'thermos', name: 'Thermos', image: 'images/thermos.jpg'},
+{id: 'trafficlight', name: 'Traffic_Light', image: 'images/trafficlight.jpg'},
+{id: 'chives', name: 'Chives', image: 'images/chives.jpg'},
+{id: 'mephone7', name: 'MePhone7', image: 'images/mephone7.jpg'},
+{id: 'rubberball', name: 'Rubber_Ball', image: 'images/rubberball.jpg'},
+{id: 'guitar', name: 'Guitar', image: 'images/guitar.jpg'},
+];
+
+var myPicker = new picker.Picker({
+    items: items
+});
+
+var pickerUI = new PickerUI(myPicker, {
+    elements: {
+        pick: "#pick",
+        pass: "#pass",
+        undo: "#undo",
+        redo: "#redo",
+        evaluating: "#evaluating",
+        favorites: "#favorites"
+    }
+});
+
+pickerUI.initialize();
+
+/* Sortable favorites - you can safely remove this, and the Sortable.min.js script, if you don't want to be able to sort your favorite list. */
+var sortable = new Sortable(pickerUI.elem.favorites.get(0), {
+    draggable: '.item',
+    animation: 100,
+    onStart: function() {
+        pickerUI.elem.favorites.addClass("sorting");
+    },
+    onEnd: function() {
+        pickerUI.elem.favorites.removeClass("sorting");
+    },
+    onUpdate: function() {
+        myPicker.setFavorites(pickerUI.elem.favorites.children().map(function() {
+            return pickerUI.getItem(this);
+        }).get());
+        pickerUI.update(true);
+    }
+});
+/* End sortable favorites */
+</script>
+</body>
+</html>
